@@ -1,0 +1,31 @@
+% Simple IEEE 802.15.4 PHY BER Curves Plot
+clc; clear; close all;
+
+% Ec/No range (dB)
+EcNo = -25:2.5:17.5;
+
+% Example BER values (just to create smooth curves)
+berOQPSK2450 = 0.5 * exp(-0.15 * (EcNo + 25));   % OQPSK 2450 MHz
+berOQPSK780  = 0.55 * exp(-0.14 * (EcNo + 25));  % OQPSK 780 MHz
+berBPSK      = 0.6 * exp(-0.13 * (EcNo + 25));   % BPSK 868/915/950 MHz
+berGFSK      = 0.58 * exp(-0.12 * (EcNo + 25));  % GFSK 950 MHz
+
+% Plot the BER curves
+semilogy(EcNo, berOQPSK2450, '-o', 'LineWidth', 1.2); hold on;
+semilogy(EcNo, berOQPSK780, '-*', 'LineWidth', 1.2);
+semilogy(EcNo, berBPSK, '-x', 'LineWidth', 1.2);
+semilogy(EcNo, berGFSK, '-v', 'LineWidth', 1.2);
+
+% Labels and title
+grid on;
+xlabel('Chip Energy to Noise Spectral Density, Ec/No (dB)');
+ylabel('BER');
+title('IEEE 802.15.4 PHY BER Curves');
+
+% Legend
+legend('OQPSK, 2450 MHz', 'OQPSK, 780 MHz', ...
+       'BPSK, 868/915/950 MHz', 'GFSK, 950 MHz', ...
+       'Location', 'southwest');
+
+% Axis range
+axis([min(EcNo) max(EcNo) 1e-2 1]);
