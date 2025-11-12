@@ -1,0 +1,39 @@
+%% EXPERIMENT 6 : DSSS MODULATION AND DEMODULATION
+clc; clear; close all;
+%% PARAMETERS
+N = 1e5;
+EbN0_db = -5:1:5;
+L = 10;                           % Spreading factor
+%% TRANSMITTER
+bits = randi([0 1],1,N);
+bpsk_sig = 2*bits - 1;
+%% PN SEQUENCE
+pn_seq = 2*randi([0 1],1,L) - 1;
+%% SPREAD SIGNAL
+spread_sig = kron(bpsk_sig, pn_seq);
+%% INITIALIZE BER
+BER_bpsk = zeros(1,length(EbN0_db));
+BER_dsss = zeros(1,length(EbN0_db));
+%% SIMULATION LOOP
+for i = 1:length(EbN0_db)
+    %% BPSK over AWGN
+    noise = randn(size(bpsk_sig));
+    rx_sig = bpsk_sig + 10^(-EbN0_db(i)/20)*noise;
+    rx_bits = rx_sig > 0;
+    BER_bpsk(i) = mean(rx_bits ~= bits);
+    %% DSSS over AWGN
+    noise_spread = randn(size(spread_sig));
+    rx_spread = spread_sig + 10^(-EbN0_db(i)/20)*noise_spread;
+    rx_matrix = reshape(rx_spread, L, N);
+    despread = sum(rx_matrix .* repmat(pn_seq.', 1, N));
+    rx_bits_dsss = despread > 0;
+    BER_dsss(i) = mean(rx_bits_dsss ~= bits);
+end
+%% PLOT
+semilogy(EbN0_db, BER_bpsk, 'b-o', 'LineWidth', 1.5); hold on;
+semilogy(EbN0_db, BER_dsss, 'r-s', 'LineWidth', 1.8);
+grid on;
+xlabel('E_b/N_0 (dB)');
+ylabel('Bit Error Rate (BER)');
+title('DSSS vs BPSK Performance');
+legend('BPSK','DSSS');
