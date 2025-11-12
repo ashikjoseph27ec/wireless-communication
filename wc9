@@ -1,0 +1,21 @@
+% Simplest Frequency Reuse Simulation
+R = 1; 
+colors = ['A','B','C','D','E','F','G']; 
+x = [-3 -1.5 0 1.5 3 1.5 0 -1.5]*R;
+y = [0 sqrt(3)/2 sqrt(3) sqrt(3)/2 0 -sqrt(3)/2 -sqrt(3) -sqrt(3)/2]*R;
+figure;
+hold on; axis equal; grid on;
+title('Frequency Reuse Pattern (N = 7)');
+xlabel('X-axis'); ylabel('Y-axis');
+n = 1;
+for i = -2:2
+    for j = -2:2
+        cx = 1.5*i*R;
+        cy = sqrt(3)*(j + mod(i,2)/2)*R;
+        f = mod(n-1,7)+1;
+        fill(x+cx, y+cy, [0.8 0.8 0.8], 'EdgeColor','k');
+        text(cx, cy, colors(f), 'FontWeight','bold', ...
+            'HorizontalAlignment','center');
+        n = n + 1;
+    end
+end
