@@ -1,0 +1,45 @@
+% Experiment 2: Hata–Okumura Model
+clc; clear; close all;
+% --- Basic parameters ---
+f = 1500e6;            % Frequency in Hz
+hb = 70;                % Base station antenna height (m)
+hm = 4.5;               % Mobile antenna height (m)
+d = 1:100:20e6;           % Distance in km
+% --- Case 1: Metropolitan Area ---
+if f <= 200
+    aHm_metro = 8.29*(log10(1.54*hm))^2 - 1.1;
+else
+    aHm_metro = 3.2*(log10(11.75*hm))^2 - 4.97;
+end
+C_metro = 0;
+A_metro = 69.55 + 26.16*log10(f) - 13.82*log10(hb) - aHm_metro;
+B_metro = 44.9 - 6.55*log10(hb);
+PL_metro = A_metro + B_metro*log10(d) + C_metro;
+% --- Case 2: Small / Medium City ---
+aHm_small = (1.1*log10(f)-0.7)*hm - (1.56*log10(f)-0.8);
+C_small = 0;
+A_small = 69.55 + 26.16*log10(f) - 13.82*log10(hb) - aHm_small;
+B_small = 44.9 - 6.55*log10(hb);
+PL_small = A_small + B_small*log10(d) + C_small;
+% --- Case 3: Suburban Area ---
+aHm_sub = (1.1*log10(f)-0.7)*hm - (1.56*log10(f)-0.8);
+C_sub = -2*(log10(f/28))^2 - 5.4;
+A_sub = 69.55 + 26.16*log10(f) - 13.82*log10(hb) - aHm_sub;
+B_sub = 44.9 - 6.55*log10(hb);
+PL_sub = A_sub + B_sub*log10(d) + C_sub;
+% --- Case 4: Open Area ---
+aHm_open = (1.1*log10(f)-0.7)*hm - (1.56*log10(f)-0.8);
+C_open = -4.78*(log10(f))^2 + 18.33*log10(f) - 40.98;
+A_open = 69.55 + 26.16*log10(f) - 13.82*log10(hb) - aHm_open;
+B_open = 44.9 - 6.55*log10(hb);
+PL_open = A_open + B_open*log10(d) + C_open;
+% --- Plotting all environments ---
+plot(d, PL_metro, 'b', 'LineWidth', 1.5); hold on;
+plot(d, PL_small, 'r', 'LineWidth', 1.5);
+plot(d, PL_sub, 'g', 'LineWidth', 1.5);
+plot(d, PL_open, 'y', 'LineWidth', 1.5);
+grid on;
+xlabel('Distance (km)');
+ylabel('Path Loss (dB)');
+title('Hata–Okumura Path Loss Model');
+legend('Metropolitan','Small City','Suburban','Open Area','Location','northwest');
