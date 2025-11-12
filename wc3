@@ -1,0 +1,41 @@
+%% EXPERIMENT 3 : BPSK OVER AWGN AND RAYLEIGH FADING CHANNEL
+clc; clear; close all;
+%% PARAMETERS
+N = 1e5;                              % Number of bits
+EbN0_db = -5:2:20;                    % Eb/N0 values (dB)
+%% TRANSMITTER
+bits = randi([0 1], 1, N);            % Random bits
+bpsk_sig = 2*bits - 1;                % BPSK modulation
+%% INITIALIZE BER
+BER_awgn = zeros(1,length(EbN0_db));
+BER_ray = zeros(1,length(EbN0_db));
+%% SIMULATION LOOP
+for i = 1:length(EbN0_db)
+    noise = (randn(1,N) + 1i*randn(1,N)) / sqrt(2);
+    h = (randn(1,N) + 1i*randn(1,N)) / sqrt(2);
+    noise = noise * 10^(-EbN0_db(i)/20);
+    % AWGN
+    rx_awgn = bpsk_sig + noise;
+    % Rayleigh
+    rx_ray = h .* bpsk_sig + noise;
+    rx_ray_eq = rx_ray ./ h;  % Equalization
+    % Detection
+    rx_bits_awgn = real(rx_awgn) > 0;
+    rx_bits_ray = real(rx_ray_eq) > 0;
+    % BER
+    BER_awgn(i) = mean(rx_bits_awgn ~= bits);
+    BER_ray(i)  = mean(rx_bits_ray ~= bits);
+end
+%% THEORETICAL RESULTS
+EbN0 = 10.^(EbN0_db/10);
+BER_theory_awgn = 0.5*erfc(sqrt(EbN0));
+BER_theory_ray  = 0.5*(1 - sqrt(EbN0./(1+EbN0)));
+%% PLOT
+semilogy(EbN0_db, BER_awgn, 'r', 'LineWidth',1.5); hold on;
+semilogy(EbN0_db, BER_ray, 'g', 'LineWidth',1.5);
+semilogy(EbN0_db, BER_theory_awgn, 'ro');
+semilogy(EbN0_db, BER_theory_ray, 'go');
+grid on; axis([-5 20 1e-5 1]);
+xlabel('E_b/N_0 (dB)'); ylabel('Bit Error Rate (BER)');
+legend('AWGN Simulated','Rayleigh Simulated','AWGN Theory','Rayleigh Theory');
+title('BPSK over AWGN and Rayleigh Fading Channels');
