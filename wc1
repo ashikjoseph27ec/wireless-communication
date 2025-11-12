@@ -1,0 +1,52 @@
+%% Experiment 1: Two Ray Ground Reflection Model
+clc; clear; close all;
+% --- Given Parameters ---
+f = 900e6;              % Frequency (Hz)
+lambda = 3e8 / f;       % Wavelength (m)
+R = -1;                 % Reflection coefficient
+Pt = 1;                 % Transmitted Power (normalized)
+Glos = 1; Gref = 1;     % Antenna gains
+ht = 50; hr = 2;        % Antenna heights (m)
+L = 1;                  % System loss
+% --- Distance vector ---
+d = 1:1:1e5;            % Distance from 1 m to 100 km
+% --- Calculate path distances ---
+d_los = sqrt((ht - hr)^2 + d.^2);
+d_ref = sqrt((ht + hr)^2 + d.^2);
+% --- Phase difference between rays ---
+phi = (2*pi*(d_ref - d_los)) / lambda;
+% --- Electric field components (LOS + reflected) ---
+s = (lambda/(4*pi)) * ...
+    ((sqrt(Glos)./d_los) + (R*sqrt(Gref).*exp(1i*phi))./d_ref);
+% --- Received Power ---
+Pr = Pt * abs(s).^2;
+Pr_norm = Pr / Pt;      % Normalized received power
+% --- Plot the exact Two-Ray interference pattern ---
+figure;
+semilogx(d, 10*log10(Pr_norm), 'b'); hold on;
+ylim([-160 -55]);
+xlabel('Distance (m)');
+ylabel('Normalized Received Power (dB)');
+title('Two Ray Ground Reflection Model');
+grid on;
+% --- Analytical Three Region Approximation ---
+dc = (4 * ht * hr) / lambda;   % Critical distance
+d1 = 1:1:ht;                   % Region 1: near field
+d2 = ht:1:dc;                  % Region 2: intermediate
+d3 = dc:1:1e5;                 % Region 3: far field
+% --- Power constants for each region ---
+K_fps = Glos * Gref * lambda^2 / ((4*pi)^2 * L);
+K_2ray = Glos * Gref * ht^2 * hr^2 / L;
+% --- Region-wise Received Power ---
+Pr1 = Pt * K_fps ./ (d1.^2 + ht^2);   % Flat region
+Pr2 = Pt * K_fps ./ (d2.^2);          % -20 dB/decade
+Pr3 = Pt * K_2ray ./ (d3.^4);         % -40 dB/decade
+% --- Plot the three regions ---
+semilogx(d1, 10*log10(Pr1), 'y--', 'LineWidth', 1.2);
+semilogx(d2, 10*log10(Pr2), 'r--', 'LineWidth', 1.2);
+semilogx(d3, 10*log10(Pr3), 'g--', 'LineWidth', 1.2);
+% --- Mark boundaries ---
+xline(ht, '--m', 'h_t', 'LabelOrientation', 'horizontal');
+xline(dc, '--m', 'd_c', 'LabelOrientation', 'horizontal');
+legend('Exact Two-Ray', 'Region 1 (Flat)', 'Region 2 (-20dB/dec)', ...
+       'Region 3 (-40dB/dec)', 'Location', 'best');
