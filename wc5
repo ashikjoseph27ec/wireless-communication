@@ -1,0 +1,62 @@
+%% EXPERIMENT 5 : WIRELESS CHANNEL EQUALIZATION (ZF & MMSE)
+clc; clear; close all;
+%% PARAMETERS
+N = 1e5;
+EbN0_db = 0:2:30;
+h = [0.407 0.815 0.407];      % Channel impulse response
+nTaps = 31;                   % Equalizer length
+%% TRANSMITTER
+bits = randi([0 1],1,N);
+bpsk_sig = 2*bits - 1;
+tx_sig = conv(bpsk_sig, h);
+%% INITIALIZE
+SER_zf = zeros(1,length(EbN0_db));
+SER_mmse = zeros(1,length(EbN0_db));
+%% LOOP
+for i = 1:length(EbN0_db)
+    SNR_lin = 10^(EbN0_db(i)/10);
+    P = sum(abs(tx_sig).^2)/length(tx_sig);
+    N0 = P/SNR_lin;
+    noise = sqrt(N0/2)*(randn(size(tx_sig)) + 1i*randn(size(tx_sig)));
+    rx_sig = tx_sig + noise;
+    L = length(h);
+    H = convmtx(h(:), nTaps);
+    %% ZF Equalizer
+    W_zf = pinv(H);
+    [~, d_idx] = max(diag(H*W_zf));
+    d = zeros(L+nTaps-1,1); d(d_idx) = 1;
+    w_zf = W_zf*d;
+    y_zf = conv(rx_sig, w_zf);
+    rx_bits_zf = real(y_zf(d_idx:d_idx+N-1)) > 0;
+    SER_zf(i) = mean(rx_bits_zf ~= bits);
+    %% MMSE Equalizer
+    gamma = 10^(-EbN0_db(i)/10);
+    W_mmse = inv(H'*H + gamma*eye(size(H,2))) * H';
+    [~, d_idx2] = max(diag(H*W_mmse));
+    d = zeros(L+nTaps-1,1); d(d_idx2) = 1;
+    w_mmse = W_mmse*d;
+    y_mmse = conv(rx_sig, w_mmse);
+    rx_bits_mmse = real(y_mmse(d_idx2:d_idx2+N-1)) > 0;
+    SER_mmse(i) = mean(rx_bits_mmse ~= bits);
+end
+%% THEORY
+SER_theory = 0.5*erfc(sqrt(10.^(EbN0_db/10)));
+%% PLOT
+semilogy(EbN0_db,SER_zf,'g','LineWidth',1.5); hold on;
+semilogy(EbN0_db,SER_mmse,'r','LineWidth',1.5);
+semilogy(EbN0_db,SER_theory,'y','LineWidth',1.5);
+grid on;
+xlabel('E_b/N_0 (dB)'); ylabel('Symbol Error Rate (SER)');
+legend('ZF Equalizer','MMSE Equalizer','No ISI');
+title('Performance of ZF and MMSE Equalizers for BPSK');
+axis([0 30 1e-4 1]);
+%% CHANNEL RESPONSE
+[H_C,W] = freqz(h,1,512);
+figure;
+subplot(1,2,1); stem(h,'filled');
+xlabel('Samples'); ylabel('Amplitude');
+title('Channel Impulse Response');
+subplot(1,2,2);
+plot(W/pi, 20*log10(abs(H_C)/max(abs(H_C))));
+xlabel('Normalized Frequency (\times\pi)'); ylabel('Magnitude (dB)');
+title('Channel Frequency Response'); grid on;
