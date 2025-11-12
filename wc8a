@@ -1,0 +1,18 @@
+% TDMA Simulation
+numUsers = 4; 
+totalTimeSlots = 10; 
+channelGain = 0.8;
+userData = randi([0 1], numUsers, totalTimeSlots); 
+timeSlots = 0:totalTimeSlots-1; 
+userSlots = mod(timeSlots, numUsers) + 1; 
+receivedData = zeros(numUsers, totalTimeSlots);
+for t = 1:totalTimeSlots
+    u = userSlots(t);
+    receivedData(u, t) = userData(u, t) * channelGain;
+end
+bitErrorRate = sum(sum(xor(userData, receivedData))) / (numUsers * totalTimeSlots);
+subplot(2,1,1); stem(timeSlots, userData', 'filled'); title('User Traffic');
+xlabel('Time (s)'); ylabel('Data'); legend('User 1','User 2','User 3','User 4');
+subplot(2,1,2); stem(timeSlots, receivedData', 'filled'); title('Received Data');
+xlabel('Time (s)'); ylabel('Data'); legend('User 1','User 2','User 3','User 4');
+disp(['Bit Error Rate: ', num2str(bitErrorRate)]);
