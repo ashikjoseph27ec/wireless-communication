@@ -1,0 +1,26 @@
+% Simplest FDMA Simulation
+numUsers = 5; 
+totalBW = 10e6; 
+carrier = 1e6; 
+userBW = totalBW / numUsers;
+Fs = 100e6; 
+T = 1e-3; 
+t = 0:1/Fs:T;
+for i = 1:numUsers
+    f = carrier + (i-1)*userBW;
+    userSig(i,:) = sin(2*pi*f*t);
+end
+fdmaSig = sum(userSig,1);
+noisySig = awgn(fdmaSig,10,'measured');
+for i = 1:numUsers
+    f = carrier + (i-1)*userBW;
+    demodSig(i,:) = noisySig .* sin(2*pi*f*t);
+end
+subplot(numUsers+1,1,1);
+plot(t,fdmaSig); title('FDMA Signal'); xlabel('Time (s)'); ylabel('Amplitude');
+for i = 1:numUsers
+    subplot(numUsers+1,1,i+1);
+    plot(t,demodSig(i,:));
+    title(['Demodulated Signal - User ',num2str(i)]);
+    xlabel('Time (s)'); ylabel('Amplitude');
+end
